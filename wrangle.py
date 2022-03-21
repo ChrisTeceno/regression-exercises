@@ -47,6 +47,14 @@ def prep_zillow(use_cache=True):
     df = df[columns]
     # drop the nulls, its a small subset of data as
     df = df.dropna()
+    # change fips to string
+    zillow.fips = zillow.fips.astype(str)
+    # add the missing leading 0, and keep only the relevant portion
+    zillow.fips = "0" + zillow.fips.str[0:4]
+    # convert year to string
+    zillow.yearbuilt = zillow.yearbuilt.astype(str)
+    # keep only relevant portion
+    zillow.yearbuilt = zillow.yearbuilt.str[0:4]
     print("Saving prepped data to csv in local directory...")
     df.to_csv(filename, index=False)
     return df
