@@ -1,6 +1,7 @@
 import acquire
 import pandas as pd
 from sklearn.model_selection import train_test_split
+from pydataset import data
 
 
 def prep_iris(df=acquire.get_iris_data()):
@@ -81,14 +82,18 @@ def prep_telco(df=acquire.get_telco_data()):
     return df
 
 
-def split_data(df, y_value):
-    # split the data set
-    train, test = train_test_split(
-        df, test_size=0.2, random_state=42, stratify=df[y_value]
-    )
-    train, validate = train_test_split(
-        train, test_size=0.3, random_state=42, stratify=train[y_value]
-    )
+def split_data(df, y_value, stratify=True):
+    # split the data set with stratifiy if True
+    if stratify:
+        train, test = train_test_split(
+            df, test_size=0.2, random_state=42, stratify=df[y_value]
+        )
+        train, validate = train_test_split(
+            train, test_size=0.3, random_state=42, stratify=train[y_value]
+        )
+    else:  # if stratify is false (for non-categorical y values)
+        train, test = train_test_split(df, test_size=0.2, random_state=42)
+        train, validate = train_test_split(train, test_size=0.3, random_state=42)
     # into x and y
     x_train = train.drop(columns=[y_value])
     y_train = train[y_value]
@@ -96,4 +101,25 @@ def split_data(df, y_value):
     y_validate = validate[y_value]
     x_test = test.drop(columns=[y_value])
     y_test = test[y_value]
-    return x_train, y_train, x_validate, y_validate, x_test, y_test
+    return (
+        train,
+        validate,
+        test,
+        x_train,
+        y_train,
+        x_validate,
+        y_validate,
+        x_test,
+        y_test,
+    )
+
+
+def prep_tips(df=data("tips")):
+    # convert gender to is_female with a 1,0 and smoker to 1,0, ,dinner to 1,0 day to number in week
+    df = df.replace(
+        ["Female", "Male", "No", "Yes", "Dinner", "Lunch", "Thur", "Fri", "Sat", "Sun"],
+        [1, 0, 0, 1, 1, 0, 4, 5, 6, 7],
+    )
+    # replace gender with is_female to correlate with above change
+    df.rename(columns={"gender": "is_female", "time": "is_dinner"}, inplace=True)
+    return df
